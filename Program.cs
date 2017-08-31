@@ -44,7 +44,7 @@ namespace Gobble
                 int y = r.Next(0, n);
                 byte bytexy = bufptr[y][x];
             }
-*/
+   */
 
 
 
