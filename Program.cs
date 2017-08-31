@@ -30,7 +30,7 @@ namespace Gobble
             for (int i = 0; i < size - 1; i++)
                 bufptr[i] = new byte[n];
 
-
+            // todo change to parallel loop
             for (int i = 0; i < size; i++)
                 Randomfill(ref bufptr[i], n);
 
