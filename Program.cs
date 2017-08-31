@@ -15,8 +15,6 @@ namespace Gobble
             ComputerInfo CI = new ComputerInfo();
             ulong totalMem = CI.TotalPhysicalMemory;
 
-            // TODO change allocations to totalmem
-
             // TODO make some random increments to fool key scanners
 
             int MB = 1024 * 1024;
