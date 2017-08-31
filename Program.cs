@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using Microsoft.VisualBasic.Devices;
 
 /// <summary>
@@ -11,6 +12,7 @@ namespace Gobble
     class Program
     {
         static Random r = new Random();
+        static byte[,] bufptr; 
         static void Main(string[] args)
         {
             ComputerInfo CI = new ComputerInfo();
@@ -19,22 +21,28 @@ namespace Gobble
             // TODO make some random increments to fool key scanners
 
             int MB = 1024 * 1024;
-            int TotalMBs = (int) (totalMem / (ulong) MB);
+            int TotalMBs = (int) ((uint)totalMem / MB);
 
-            int size = TotalMBs * 4096;
+            int size = TotalMBs * 1000;
             int n = 256 ;
 
-            byte[][] bufptr = new byte[size][];
+            bufptr = new byte[size, n];
 
-            for (int i = 0; i < size - 1; i++)
-                bufptr[i] = new byte[n];
+            //for (int i = 0; i < size; i++)
+ //           Parallel.For(0, size, i =>
+ //            { bufptr[i] = new byte[n]; });
 
-            // todo change to parallel loop
-            for (int i = 0; i < size; i++)
-                Randomfill(ref bufptr[i], n);
+                
+
+            Console.WriteLine("Mem committed");
+
+            Parallel.For(0, size, i =>
+             {
+                 Randomfill(i,n);
+             });
 
 
-            long totalsize = size * n;
+     //       long totalsize = size * n;
             Console.WriteLine("Filled array with random bytes");
 
    /*        for (int i = 0; i < size; i++)
@@ -50,10 +58,11 @@ namespace Gobble
             // System.Threading.Thread.Sleep(10000);
         }
 
-        private static void Randomfill(ref byte[] p, int length)
+        private static void Randomfill(int j, int k)
         {
-            for (int i = 0; i < length; i++)
-                p[i] = (byte) r.Next(0, 255);
+            for (int i = 0; i < j; i++)
+                for (int n = 0; n < k; n++)
+                    bufptr[i,n] = (byte) r.Next(0, 255);
         }
                 
        
