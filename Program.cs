@@ -3,6 +3,7 @@ using Microsoft.VisualBasic.Devices;
 
 /// <summary>
 /// allocates as much memory as possible and writes random bytes to it.
+/// under development do not use at this time
 /// </summary>
 
 namespace Gobble
