@@ -38,13 +38,13 @@ namespace Gobble
             long totalsize = size * n;
             Console.WriteLine("Filled array with random bytes");
 
-   //         for (int i = 0; i < size; i++)
+   /*        for (int i = 0; i < size; i++)
             {
                 int x = r.Next(0, size);
                 int y = r.Next(0, n);
                 byte bytexy = bufptr[y][x];
             }
-
+*/
 
 
 
