@@ -22,6 +22,7 @@
 [Bb]uild/
 bld/
 [Bb]in/
+![Bb]in/x64/Release
 [Oo]bj/
 
 # Visual Studio 2015 cache/options directory
