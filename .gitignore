@@ -14,9 +14,10 @@
 [Dd]ebug/
 [Dd]ebugPublic/
 [Rr]elease/
-!bin/*/[Rr]elease/*
+!bin/*/[Rr]elease/*.exe
 [Rr]eleases/
 [Xx]64/
+![Xx]64/Release
 [Xx]86/
 [Bb]uild/
 bld/
