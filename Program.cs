@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Microsoft.VisualBasic.Devices;
+using System.Security.Cryptography;
+
 
 /// <summary>
 /// allocates as much memory as possible and writes either zeros, ones, or random bytes to it
@@ -10,19 +12,28 @@ namespace Gobble
 {
     class Program
     {
-        static Random r = new Random();
-        static string option;
-        static string filler;
-        struct bytes
+    static string option;
+     struct bytes
         {
             public byte[] sequence;
         }
 
-        static bytes[] arrayofbytes;
 
         static void Main(string[] args)
         {
+            int MB = 1024 * 1024;
+            int Unit = MB * 1024;
+            int GB = MB * 1024;
+
+            RNGCryptoServiceProvider CSP = new RNGCryptoServiceProvider();
+            ComputerInfo CI = new ComputerInfo();
+
+            string filler;
+            int maxthreads;
+
+            
             filler = "0's";
+            maxthreads = 2;
             if (args.Length == 0)
                 option = "c";
             else
@@ -31,69 +42,81 @@ namespace Gobble
                     case "-r":
                         option = "r";
                         filler = "random bytes";
+                        maxthreads = 1;   // CSP chokes on multiple threads
+                        Unit = MB * 256;                 
                         break;
                     case "-f":
                     case "-1":
                         option = "f";
                         filler = "1's";
+                        maxthreads = 12;
+                        Unit = MB * 1024;
                         break;
                     default:
                         option = "c";
+                        maxthreads = 2;
+                        Unit = MB * 1024;
                         break;
                 }
 
 
-            ComputerInfo CI = new ComputerInfo();
+            
             ulong totalMem = CI.TotalPhysicalMemory;
             ulong availablePMem = CI.AvailablePhysicalMemory;
 
+            int TotalGBs = (int)((uint)totalMem / Unit);
 
-            int MB = 1024 * 1024;
-            int GB = MB * 1024;
-            int TotalGBs = (int)((uint)totalMem / GB);
-
-            int GBs = (int) (availablePMem / (ulong) GB);
+            int Units = (int) (availablePMem / (ulong) Unit);
             int size = TotalGBs;
-
+            bytes[] arrayofbytes;
             DateTime tstart = DateTime.Now;
-            arrayofbytes = new bytes[GBs];
-            for (int i = 0; i < GBs; i++)
-                arrayofbytes[i].sequence = new byte[GB];
+            arrayofbytes = new bytes[Units];
+            for (int i = 0; i < Units; i++)
+                arrayofbytes[i].sequence = new byte[Unit];
 
             //todo allocate last bytes of memory here
-            ulong remaining = availablePMem - ((ulong) GBs * (ulong) GB );
+            ulong remaining = availablePMem - ((ulong) Units * (ulong) Unit );
             byte[] lastbytes = new byte[remaining] ;
 
-            string totalbytes = ((double)GBs + (double)lastbytes.Length / (double)GB).ToString("0.000");
-            Console.WriteLine( totalbytes + " GB committed");
-    
-            Parallel.For(0, GBs, new ParallelOptions { MaxDegreeOfParallelism = 16 }, i =>
+            double factor = (double) Unit / (double) GB;
+            string totalbytes = ((double)Units * factor + (double)lastbytes.Length / (double)GB).ToString("0.00");
+            Console.WriteLine(totalbytes + " committed\n");
+            if (option == "r")
+                for (int i = 0; i < Units; i++)
+                {
+                    CSP.GetBytes(arrayofbytes[i].sequence);
+                    if ((i * Unit) % GB == 0)
+                            Console.Write(".");
+                }
+            else
+                Parallel.For(0, Units, new ParallelOptions { MaxDegreeOfParallelism = maxthreads }, i =>
              {
-                 if (option == "r")
-                       r.NextBytes(arrayofbytes[i].sequence);
-                 else if (option =="f")
-                    for (int n = 0; n < GB; n++)
-                        arrayofbytes[i].sequence[n] = 255;
+
+                 if (option == "f")
+                     for (int n = 0; n < Unit; n++)
+                         arrayofbytes[i].sequence[n] = 255;
                  else
-                    Array.Clear(arrayofbytes[i].sequence, 0, GB);
+                     Array.Clear(arrayofbytes[i].sequence, 0, Unit);
+
+                 Console.Write(".");
              });
 
             //  fill the remaining bytes
             if (option == "r")
-                r.NextBytes(lastbytes);
+                CSP.GetBytes(lastbytes);
             else if (option == "f")
                 for (uint n = 0; n < remaining; n++)
                     lastbytes[n] = 255;
             else
                 Array.Clear(lastbytes, 0, (int) remaining);
 
+            CSP.Dispose();
+
             DateTime tend = DateTime.Now;
             TimeSpan t = tend.Subtract(tstart);
-            Console.Write("     time: " + t.TotalSeconds.ToString("0.000") + " seconds  (" + (  GBs/t.TotalSeconds).ToString("0.0") + " GB/s)\n");
-
-
-            Console.WriteLine(totalbytes + " GB Filled with " + filler);
-
+            Console.Write("\n" + totalbytes + " GB Filled with " + filler);
+            Console.Write("  in " + t.TotalSeconds.ToString("0.00") + " seconds  (" + (  Units/t.TotalSeconds).ToString("0.00") + " GB/s)");
+      
 
         }
     }
