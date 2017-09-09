@@ -52,7 +52,7 @@ namespace Gobble
                 case "-r":
                     option = "r";
                     filler = "random bytes";
-                    maxthreads = 1;   // CSP chokes on multiple threads
+                    maxthreads = 4; // if too high may cause out of memory, depending on machine
                     Unit = MB * 256;                 
                     break;
                 case "-f":
@@ -95,6 +95,7 @@ namespace Gobble
 
 
             RNGCryptoServiceProvider CSP = new RNGCryptoServiceProvider();
+            /*
             if (option == "r")
                 for (int i = 0; i < Units; i++)
                 {
@@ -103,16 +104,20 @@ namespace Gobble
                             Console.Write(".");
                 }
             else
-                Parallel.For(0, Units, new ParallelOptions { MaxDegreeOfParallelism = maxthreads }, i =>
+            */
+            Parallel.For(0, Units, new ParallelOptions { MaxDegreeOfParallelism = maxthreads }, i =>
              {
-
-                 if (option == "f")
+                 if (option == "r")
+                     CSP.GetBytes(arrayofbytes[i].sequence);
+                 else if (option == "f")
                      for (int n = 0; n < Unit; n++)
                          arrayofbytes[i].sequence[n] = 255;
                  else
                      Array.Clear(arrayofbytes[i].sequence, 0, Unit);
 
-                 Console.Write(".");
+                 if ( i % (GB/Unit) == 0)
+                         Console.Write("."); // progress indicator
+    
              });
 
             //  fill the remaining bytes
