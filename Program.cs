@@ -136,7 +136,7 @@ namespace Gobble
             DateTime tend = DateTime.Now;
             TimeSpan t = tend.Subtract(tstart);
             Console.Write("\n" + totalbytes + " GB Filled with " + filler);
-            Console.WriteLine("  in " + t.TotalSeconds.ToString("0.00") + " seconds  (" + (  Units/t.TotalSeconds).ToString("0.00") + " GB/s)");
+            Console.WriteLine("  in " + t.TotalSeconds.ToString("0.00") + " seconds  (" + (  (availablePMem/GB)/t.TotalSeconds).ToString("0.00") + " GB/s)");
 
             GC.Collect();
             GC.WaitForPendingFinalizers();
