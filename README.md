@@ -6,12 +6,12 @@ This program was written mostly for research purposes.  It may be useful for sec
 
 Usage:
 
-Gobble <option>
+Gobble [option]
 
-Options 	-c		fills the memory with binary zeros
-		-f		fills the memory with binary ones
-		-r		fills the memory with random bytes
-		-a         fills the memory with zeros, then ones, then 				   random bytes
+Options    	-c         fills the memory with binary zeros
+           -f         fills the memory with binary ones
+           -r         fills the memory with random bytes
+           -a         fills the memory with zeros, then ones, then random bytes
 
 Notes: 
 
