@@ -12,7 +12,7 @@ Options
 - -c fills the memory with binary zeros
 - -f fills the memory with binary ones
 - -r fills the memory with random bytes
-- -a ills the memory with zeros, then ones, then random bytes
+- -a fills the memory with zeros, then ones, then random bytes
 
 Notes: 
 
