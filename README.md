@@ -43,9 +43,9 @@ Types of attacks on RAM.
 
 - DMA attack - this involves attaching a physical device to a computer, either internally, or through certain types of ports, such as the IEEE 1394 firewire ports.  see https://en.wikipedia.org/wiki/DMA_attack 
  
-- Memory images on disk - There are several tools used by attackers and investigators to search files on disk that contain contents of RAM.  Pagefiles, dump files, swap files, and hibernation files all contain images of the content of portions of RAM.  
+- Memory images on disk - There are several tools used by attackers to search files on disk that contain contents of RAM.  Pagefiles, dump files, swap files, and hibernation files all contain images of the content of portions of RAM.  
 
-All of the above, except possibly the malware attack, require physical access to the equipment.  Exploiting memory contents from disk files such as paging and dump files are probably the most likely exposures. There are methods to protect against theese exploitations that involve encrypting the files or not using them.  
+All of the above, except possibly the malware attack, require physical access to the equipment.  Exploiting memory contents from disk files such as paging and dump files are probably the most likely exposures. There are methods to protect against these exploitations that involve encrypting the files or not using them.  
 
 The DMA and cold-boot attacks would almost certainly require the attacker to access your computer while it is running with sensitive data in memory.  
 

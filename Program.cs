@@ -95,16 +95,8 @@ namespace Gobble
 
 
             RNGCryptoServiceProvider CSP = new RNGCryptoServiceProvider();
-            /*
-            if (option == "r")
-                for (int i = 0; i < Units; i++)
-                {
-                    CSP.GetBytes(arrayofbytes[i].sequence);
-                    if ((i * Unit) % GB == 0)
-                            Console.Write(".");
-                }
-            else
-            */
+            
+            // runs fill operations on segments of memory in parallel to reduce elapsed time
             Parallel.For(0, Units, new ParallelOptions { MaxDegreeOfParallelism = maxthreads }, i =>
              {
                  if (option == "r")

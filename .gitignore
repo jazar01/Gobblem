@@ -17,8 +17,9 @@
 bld/
 [Oo]bj/
 
+# exclude build result files that are not needed
 *.exe.config
-*.vshost.exe
+*.vhost.exe
 *.manifest
 
 # Visual Studio 2015 cache/options directory
@@ -242,3 +243,4 @@ ModelManifest.xml
 
 # FAKE - F# Make
 .fake/
+/bin/x64/Release/Gobble.vshost.exe
