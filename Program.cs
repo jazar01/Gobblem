@@ -23,117 +23,146 @@ namespace Gobble
 
         static void Main(string[] args)
         {
+            string operation;
+            int count=1;
+
             string parm;
             if (args.Length == 0)
-                parm = "-c";
+                operation = "c";
             else
-                parm = args[0];
-
-            if (parm == "-a")
             {
-                fillmem("-c");
-                fillmem("-f");
-                fillmem("-r");
+                parm = args[0].ToLower();
+                if (parm.Length > 2)
+                    if (int.TryParse(parm.Substring(2), out int reps))
+                        if (reps < 1 || reps > 999)
+                            Console.WriteLine("Count not valid, defaulting to 1");
+                        else
+                            count = reps;
+                    else
+                        Console.WriteLine("Count not valid, defaulting to 1");
+
+                operation = parm.Substring(1, 1);
+
+            }
+
+            if (operation == "a")
+            {
+                for (int i = 0; i < count; i++)
+                {
+                    fillmem("c");
+                    fillmem("f");
+                    fillmem("r");
+                }
             }
             else
-                fillmem(parm);
+                for (int i = 0; i < count; i++)
+                {
+                    fillmem(operation);
+                }
         }
 
 
-        static void fillmem (string parm)
+
+
+        static void fillmem (string operation)
             {
             int Unit;
-            string option;
             string filler;
             int maxthreads;
 
-            switch (parm)
+            switch (operation)
                 {
-                case "-r":
-                    option = "r";
+                case "r":
                     filler = "random bytes";
-                    maxthreads = 4; // if too high may cause out of memory, depending on machine
+                    maxthreads = 2; // if too high may cause out of memory, depending on machine
                     Unit = MB * 256;                 
                     break;
-                case "-f":
-                case "-1":
-                    option = "f";
+                case "f":
+                case "1":
                     filler = "1's";
                     maxthreads = 12;
                     Unit = MB * 1024;
                     break;
-                case "-c":
-                case "-0":
+                case "c":
+                case "0":
                 default:
-                    option = "c";
                     filler = "0's";
                     maxthreads = 2;
                     Unit = MB * 1024;
                     break;
                 }
 
-            // get info about available memory
-            ComputerInfo CI = new ComputerInfo();
-            ulong availablePMem = CI.AvailablePhysicalMemory;
-            int Units = (int) (availablePMem / (ulong) Unit);
 
-            bytes[] arrayofbytes;
-            DateTime tstart = DateTime.Now;
+                System.Threading.Thread.MemoryBarrier();
+                // get info about available memory
+                ComputerInfo CI = new ComputerInfo();
+                ulong availablePMem = CI.AvailablePhysicalMemory;
+                int Units = (int)(availablePMem / (ulong)Unit);
 
-            // this causes the memory to become committed to the process
-            arrayofbytes = new bytes[Units];
-            for (int i = 0; i < Units; i++)
-                arrayofbytes[i].sequence = new byte[Unit];
+                bytes[] arrayofbytes;
+                DateTime tstart = DateTime.Now;
 
-            //commit last bytes of memory here
-            ulong remaining = availablePMem - ((ulong) Units * (ulong) Unit );
-            byte[] lastbytes = new byte[remaining] ;
+                byte[] lastbytes;
+                ulong remaining;
+                string totalbytes;
 
-            double factor = (double) Unit / (double) GB;
-            string totalbytes = ((double)Units * factor + (double)lastbytes.Length / (double)GB).ToString("0.00");
-            Console.WriteLine(totalbytes + " committed\n");
+                // this causes the memory to become committed to the process
+                arrayofbytes = new bytes[Units];
+                for (int i = 0; i < Units; i++)
+                    arrayofbytes[i].sequence = new byte[Unit];
+
+                //commit last bytes of memory here
+                remaining = availablePMem - ((ulong)Units * (ulong)Unit);
+                lastbytes = new byte[remaining];
+
+                double factor = (double)Unit / (double)GB;
+                totalbytes = ((double)Units * factor + (double)lastbytes.Length / (double)GB).ToString("0.00");
+                Console.WriteLine(totalbytes + " committed\n");
+
+                System.Threading.Thread.MemoryBarrier();
+
+                RNGCryptoServiceProvider CSP = new RNGCryptoServiceProvider();
+
+                // runs fill operations on segments of memory in parallel to reduce elapsed time
+                Parallel.For(0, Units, new ParallelOptions { MaxDegreeOfParallelism = maxthreads }, i =>
+                     {
+                         if (operation == "r")
+                             CSP.GetBytes(arrayofbytes[i].sequence);
+                         else if (operation == "f")
+                             for (int n = 0; n < Unit; n++)
+                                 arrayofbytes[i].sequence[n] = 255;
+                         else
+                             Array.Clear(arrayofbytes[i].sequence, 0, Unit);
+
+                         if (i % (GB / Unit) == 0)
+                             Console.Write("."); // progress indicator
+                     });
 
 
-            RNGCryptoServiceProvider CSP = new RNGCryptoServiceProvider();
-            
-            // runs fill operations on segments of memory in parallel to reduce elapsed time
-            Parallel.For(0, Units, new ParallelOptions { MaxDegreeOfParallelism = maxthreads }, i =>
-             {
-                 if (option == "r")
-                     CSP.GetBytes(arrayofbytes[i].sequence);
-                 else if (option == "f")
-                     for (int n = 0; n < Unit; n++)
-                         arrayofbytes[i].sequence[n] = 255;
-                 else
-                     Array.Clear(arrayofbytes[i].sequence, 0, Unit);
+                //  fill the remaining bytes
+                if (operation == "r")
+                    CSP.GetBytes(lastbytes);
+                else if (operation == "f")
+                    for (uint n = 0; n < remaining; n++)
+                        lastbytes[n] = 255;
+                else
+                    Array.Clear(lastbytes, 0, (int)remaining);
 
-                 if ( i % (GB/Unit) == 0)
-                         Console.Write("."); // progress indicator
-    
-             });
+                CSP.Dispose();
+                arrayofbytes = null;
+                lastbytes = null;
 
-            //  fill the remaining bytes
-            if (option == "r")
-                CSP.GetBytes(lastbytes);
-            else if (option == "f")
-                for (uint n = 0; n < remaining; n++)
-                    lastbytes[n] = 255;
-            else
-                Array.Clear(lastbytes, 0, (int) remaining);
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
 
-            CSP.Dispose();
-            arrayofbytes = null;
-            lastbytes = null;
-
-            DateTime tend = DateTime.Now;
-            TimeSpan t = tend.Subtract(tstart);
-            Console.Write("\n" + totalbytes + " GB Filled with " + filler);
-            Console.WriteLine("  in " + t.TotalSeconds.ToString("0.00") + " seconds  (" + (  (availablePMem/GB)/t.TotalSeconds).ToString("0.00") + " GB/s)");
-
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
+                DateTime tend = DateTime.Now;
+                TimeSpan t = tend.Subtract(tstart);
+                Console.Write("\n" + totalbytes + " GB Filled with " + filler);
+                Console.WriteLine("  in " + t.TotalSeconds.ToString("0.00") + " seconds  (" + ((availablePMem / GB) / t.TotalSeconds).ToString("0.00") + " GB/s)");
+            }
+          
 
         }
     }
-}
+
 
