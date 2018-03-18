@@ -18,6 +18,8 @@ Notes:
 
 -c is the fastest option.  If no valid option is specified then -c is used as the default.  
 
+Multiple rounds can be performed by adding a number between 1 and 999 after the operation.  For example: -r3 fills the memory with random bytes three times.  
+
 All memory occupied by this program is freed when the process is complete.  Usually completed in a few seconds. 
 
 This program will only clear memory that is not in use by the OS or other programs.  To ensure that sensitive data or encryption keys are overwritten, close all programs and services that are using those keys before running gobble.  Again, gobble only clears memory that is not currently allocated to a program or OS.
